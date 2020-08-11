@@ -96,6 +96,13 @@ void drawImage(const uint8_t* image_addr){
     matrix.show();
 }
 
+void drawTest(void){
+    for(int x = 0; x<8; x++){
+      matrix.drawPixel(x, 0, palette[x]); 
+    }
+    matrix.show();
+}
+
 int pop_detection = 0;
 bool smiling = false;
 unsigned long smiletimer = 0;
@@ -129,7 +136,9 @@ void setup() {
     palette[6] = matrix.Color(255,255,0);
     palette[7] = matrix.Color(255,255,255);
 
-    
+    drawTest();
+    delay(5000);
+
 }
 
 float vol = 0;
