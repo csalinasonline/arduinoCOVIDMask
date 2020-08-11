@@ -184,9 +184,9 @@ void loop() {
 
     if(smiling){
         drawImage((const uint8_t*)mouth_smile);
-    } else if(vol < 0.20){
-        drawImage((const uint8_t*)mouth_0);
     } else if(vol < 1){
+        drawImage((const uint8_t*)mouth_0);
+    } else if(vol < 3){
         drawImage((const uint8_t*)mouth_1);
     } else if(vol < 5){
         drawImage((const uint8_t*)mouth_2);
