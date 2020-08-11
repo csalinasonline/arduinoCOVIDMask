@@ -1,8 +1,3 @@
-//code by Tyler Glaiel
-//for this mask: https://twitter.com/TylerGlaiel/status/1265035386109128704
-
-//You will need to also include these libraries in the Arduino IDE
-//see here: https://www.arduino.cc/en/guide/libraries
 #include <Adafruit_NeoPixel.h>
 #include <Adafruit_NeoMatrix.h>
 #include <gamma.h>
@@ -82,7 +77,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(8, 8, 6,
   NEO_GRB            + NEO_KHZ800);
 
 
-void drawImage(short image_addr){
+void drawImage(const uint8_t* image_addr){
     for(int x = 0; x<8; x++){
         for(int y = 0; y<8; y++){
             uint8_t index = pgm_read_byte(image_addr+x+y*8);
@@ -148,16 +143,16 @@ void loop() {
     if(millis() > smiletimer) smiling = false;
 
     if(smiling){
-        drawImage((short)mouth_smile);
+        drawImage((const uint8_t*)mouth_smile);
     } else if(vol < 200){
-        drawImage((short)mouth_0);
+        drawImage((const uint8_t*)mouth_0);
     } else if(vol < 250){
-        drawImage((short)mouth_1);
+        drawImage((const uint8_t*)mouth_1);
     } else if(vol < 350){
-        drawImage((short)mouth_2);
+        drawImage((const uint8_t*)mouth_2);
     } else if(vol < 450){
-        drawImage((short)mouth_3);
+        drawImage((const uint8_t*)mouth_3);
     } else {
-        drawImage((short)mouth_4);
+        drawImage((const uint8_t*)mouth_4);
     }
 } 
