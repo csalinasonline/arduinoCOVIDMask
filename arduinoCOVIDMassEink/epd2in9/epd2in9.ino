@@ -81,14 +81,10 @@ void loop() {
   time_string[3] = time_now_s % 60 / 10 + '0';
   time_string[4] = time_now_s % 60 % 10 + '0';
 
-  paint.SetWidth(32);
-  paint.SetHeight(96);
-  paint.SetRotate(ROTATE_90);
 
-  paint.Clear(UNCOLORED);
-  paint.DrawStringAt(0, 4, time_string, &Font24, COLORED);
-  epd.SetFrameMemory(paint.GetImage(), 80, 72, paint.GetWidth(), paint.GetHeight());
+  epd.SetFrameMemory(IMAGE_DATA2);
   epd.DisplayFrame();
-
+  epd.SetFrameMemory(IMAGE_DATA2);
+  epd.DisplayFrame();
   delay(500);
 }
