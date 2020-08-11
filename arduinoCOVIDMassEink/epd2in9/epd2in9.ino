@@ -63,59 +63,12 @@ void setup() {
   epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
   epd.DisplayFrame();
 
-//  paint.SetRotate(ROTATE_0);
-//  paint.SetWidth(128);
-//  paint.SetHeight(24);
-//
-//  /* For simplicity, the arguments are explicit numerical coordinates */
-//  paint.Clear(COLORED);
-//  paint.DrawStringAt(0, 4, "Hello world!", &Font16, UNCOLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 0, 10, paint.GetWidth(), paint.GetHeight());
-//  
-//  paint.Clear(UNCOLORED);
-//  paint.DrawStringAt(0, 4, "e-Paper Demo", &Font16, COLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 0, 30, paint.GetWidth(), paint.GetHeight());
-//
-//  paint.SetWidth(64);
-//  paint.SetHeight(64);
-//  
-//  paint.Clear(UNCOLORED);
-//  paint.DrawRectangle(0, 0, 40, 50, COLORED);
-//  paint.DrawLine(0, 0, 40, 50, COLORED);
-//  paint.DrawLine(40, 0, 0, 50, COLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 16, 60, paint.GetWidth(), paint.GetHeight());
-//
-//  paint.Clear(UNCOLORED);
-//  paint.DrawCircle(32, 32, 30, COLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 72, 60, paint.GetWidth(), paint.GetHeight());
-//
-//  paint.Clear(UNCOLORED);
-//  paint.DrawFilledRectangle(0, 0, 40, 50, COLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 16, 130, paint.GetWidth(), paint.GetHeight());
-//
-//  paint.Clear(UNCOLORED);
-//  paint.DrawFilledCircle(32, 32, 30, COLORED);
-//  epd.SetFrameMemory(paint.GetImage(), 72, 130, paint.GetWidth(), paint.GetHeight());
-//  epd.DisplayFrame();
-
   delay(2000);
 
   if (epd.Init(lut_partial_update) != 0) {
       Serial.print("e-Paper init failed");
       return;
   }
-
-  /** 
-   *  there are 2 memory areas embedded in the e-paper display
-   *  and once the display is refreshed, the memory area will be auto-toggled,
-   *  i.e. the next action of SetFrameMemory will set the other memory area
-   *  therefore you have to set the frame memory and refresh the display twice.
-   */
-//  epd.SetFrameMemory(IMAGE_DATA);
-//  epd.DisplayFrame();
-//  epd.SetFrameMemory(IMAGE_DATA);
-//  epd.DisplayFrame();
-
   time_start_ms = millis();
 }
 
