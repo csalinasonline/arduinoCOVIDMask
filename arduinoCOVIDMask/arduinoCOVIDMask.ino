@@ -2,6 +2,14 @@
 #include <Adafruit_NeoMatrix.h>
 #include <gamma.h>
 
+#include <PDM.h>
+
+// buffer to read samples into, each sample is 16-bits
+short sampleBuffer[256];
+
+// number of samples read
+volatile int samplesRead;
+
 #define lengthof(A) ((sizeof((A))/sizeof((A)[0])))
 
 const PROGMEM uint8_t mouth_0[8][8] = {
@@ -94,6 +102,22 @@ unsigned long smiletimer = 0;
 unsigned long last_face = 0;
 
 void setup() {
+    Serial.begin(9600);
+    
+    // configure the data receive callback
+    PDM.onReceive(onPDMdata);
+
+    // optionally set the gain, defaults to 20
+    PDM.setGain(30);
+  
+    // initialize PDM with:
+    // - one channel (mono mode)
+    // - a 16 kHz sample rate
+    if (!PDM.begin(1, 16000)) {
+      Serial.println("Failed to start PDM!");
+      while (1);
+    }
+  
     matrix.begin();
 
     palette[0] = matrix.Color(0,0,0);
@@ -105,24 +129,31 @@ void setup() {
     palette[6] = matrix.Color(255,255,0);
     palette[7] = matrix.Color(255,255,255);
 
-    Serial.begin(9600);
+    
 }
 
 float vol = 0;
-const uint16_t samples = 128;
 
 void loop() {
     float nvol = 0;
-    int previous_peak = -1;
+    int val;
+
+    // wait for samples to be read
+    if (samplesRead) {
+      // print samples to the serial monitor or plotter
+      for (int i = 0; i < samplesRead; i++) {
+        auto analog = sampleBuffer[i];
+        val = map(analog, -32768, 32767, 0, 1023);
+        auto micline = abs(val - 512);
+        nvol = max(micline, nvol);                     
+      }
+      // clear the read count
+      samplesRead = 0;
+    }    
     
-    for (int i = 0; i<samples; i++){
-        auto analog = analogRead(A0);
-        auto micline = abs(analog - 512);
-
-        nvol = max(micline, nvol);
-    }
-
     vol = (nvol + 1.0*vol)/2.0;
+
+    //Serial.println(vol); 
 
     if(nvol > 200){
         pop_detection += 1;
@@ -144,15 +175,26 @@ void loop() {
 
     if(smiling){
         drawImage((const uint8_t*)mouth_smile);
-    } else if(vol < 200){
+    } else if(vol < 0.20){
         drawImage((const uint8_t*)mouth_0);
-    } else if(vol < 250){
+    } else if(vol < 1){
         drawImage((const uint8_t*)mouth_1);
-    } else if(vol < 350){
+    } else if(vol < 5){
         drawImage((const uint8_t*)mouth_2);
-    } else if(vol < 450){
+    } else if(vol < 10){
         drawImage((const uint8_t*)mouth_3);
     } else {
         drawImage((const uint8_t*)mouth_4);
     }
 } 
+
+void onPDMdata() {
+  // query the number of bytes available
+  int bytesAvailable = PDM.available();
+
+  // read into the sample buffer
+  PDM.read(sampleBuffer, bytesAvailable);
+
+  // 16-bit, 2 bytes per sample
+  samplesRead = bytesAvailable / 2;
+}
