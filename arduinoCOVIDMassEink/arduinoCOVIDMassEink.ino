@@ -1,8 +1,15 @@
-#include <Adafruit_NeoPixel.h>
-#include <Adafruit_NeoMatrix.h>
-#include <gamma.h>
-
 #include <PDM.h>
+#include <SPI.h>
+#include "epd2in9.h"
+#include "epdpaint.h"
+#include "imagedata.h"
+
+#define COLORED     0
+#define UNCOLORED   1
+
+unsigned char image[1024];
+Paint paint(image, 0, 0);    // width should be the multiple of 8 
+Epd epd;
 
 // buffer to read samples into, each sample is 16-bits
 short sampleBuffer[256];
@@ -10,97 +17,14 @@ short sampleBuffer[256];
 // number of samples read
 volatile int samplesRead;
 
-#define lengthof(A) ((sizeof((A))/sizeof((A)[0])))
-
-const PROGMEM uint8_t mouth_0[8][8] = {
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0},
-    {6,6,6,6,6,6,6,6},
-    {6,6,6,6,6,6,6,6},
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0}
-};
-
-const PROGMEM uint8_t mouth_4[8][8] = {
-    {0,0,6,6,6,6,0,0},
-    {0,6,0,0,0,0,6,0},
-    {6,0,0,0,0,0,0,6},
-    {6,0,0,0,0,0,0,6},
-    {6,0,0,0,0,0,0,6},
-    {6,0,0,0,0,0,0,6},
-    {0,6,0,0,0,0,6,0},
-    {0,0,6,6,6,6,0,0}
-};
-
-const PROGMEM uint8_t mouth_3[8][8] = {
-    {0,0,0,0,0,0,0,0},
-    {0,0,6,6,6,6,0,0},
-    {0,6,0,0,0,0,6,0},
-    {6,0,0,0,0,0,0,6},
-    {6,0,0,0,0,0,0,6},
-    {0,6,0,0,0,0,6,0},
-    {0,0,6,6,6,6,0,0},
-    {0,0,0,0,0,0,0,0}
-};
-
-const PROGMEM uint8_t mouth_2[8][8] = {
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0},
-    {0,6,6,6,6,6,6,0},
-    {6,0,0,0,0,0,0,6},
-    {6,0,0,0,0,0,0,6},
-    {0,6,6,6,6,6,6,0},
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0}
-};
-
-const PROGMEM uint8_t mouth_1[8][8] = {
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,6,6,0,0,0},
-    {6,6,6,0,0,6,6,6},
-    {6,6,6,0,0,6,6,6},
-    {0,0,0,6,6,0,0,0},
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0}
-};
-
-const PROGMEM uint8_t mouth_smile[8][8] = {
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0},
-    {6,0,0,0,0,0,0,6},
-    {6,6,0,0,0,0,6,6},
-    {0,6,6,6,6,6,6,0},
-    {0,0,6,6,6,6,0,0},
-    {0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0}
-};
-
-uint16_t palette[8] = {};
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(8, 8, 6,
-  NEO_MATRIX_BOTTOM     + NEO_MATRIX_RIGHT +
-  NEO_MATRIX_ROWS    + NEO_MATRIX_ZIGZAG,
-  NEO_GRB            + NEO_KHZ800);
-
-
 void drawImage(const uint8_t* image_addr){
-    for(int x = 0; x<8; x++){
-        for(int y = 0; y<8; y++){
-            uint8_t index = pgm_read_byte(image_addr+x+y*8);
-            matrix.drawPixel(x, y, palette[index]); 
-        }
-    }
-
-    matrix.show();
+;//
 }
 
 void drawTest(void){
-    for(int x = 0; x<8; x++){
-      matrix.drawPixel(x, 0, palette[x]); 
-    }
-    matrix.show();
+  paint.Clear(UNCOLORED);
+  epd.SetFrameMemory(deephomebrew_logo);
+  epd.DisplayFrame();
 }
 
 int pop_detection = 0;
@@ -110,6 +34,28 @@ unsigned long last_face = 0;
 
 void setup() {
     Serial.begin(9600);
+    if (epd.Init(lut_full_update) != 0) {
+        Serial.print("e-Paper init failed");
+        return;
+    }    
+
+    /** 
+     *  there are 2 memory areas embedded in the e-paper display
+     *  and once the display is refreshed, the memory area will be auto-toggled,
+     *  i.e. the next action of SetFrameMemory will set the other memory area
+     *  therefore you have to clear the frame memory twice.
+     */
+    epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
+    epd.DisplayFrame();
+    epd.ClearFrameMemory(0xFF);   // bit set = white, bit reset = black
+    epd.DisplayFrame();
+
+    delay(2000);
+
+    if (epd.Init(lut_partial_update) != 0) {
+        Serial.print("e-Paper init failed");
+        return;
+    }    
     
     // configure the data receive callback
     PDM.onReceive(onPDMdata);
@@ -125,17 +71,7 @@ void setup() {
       while (1);
     }
   
-    matrix.begin();
-
-    palette[0] = matrix.Color(0,0,0);
-    palette[1] = matrix.Color(255,0,0);
-    palette[2] = matrix.Color(0,255,0);
-    palette[3] = matrix.Color(0,0,255);
-    palette[4] = matrix.Color(0,255,255);
-    palette[5] = matrix.Color(255,0,255);
-    palette[6] = matrix.Color(255,255,0);
-    palette[7] = matrix.Color(255,255,255);
-
+    // show logo
     drawTest();
     delay(5000);
 
@@ -183,18 +119,19 @@ void loop() {
     if(millis() > smiletimer) smiling = false;
 
     if(smiling){
-        drawImage((const uint8_t*)mouth_smile);
-    } else if(vol < 1){
-        drawImage((const uint8_t*)mouth_0);
-    } else if(vol < 3){
-        drawImage((const uint8_t*)mouth_1);
-    } else if(vol < 5){
-        drawImage((const uint8_t*)mouth_2);
-    } else if(vol < 10){
-        drawImage((const uint8_t*)mouth_3);
+        epd.SetFrameMemory(mouth_smile);
+    } else if(vol < 2){
+        epd.SetFrameMemory(mouth_0);
+    } else if(vol < 4){
+        epd.SetFrameMemory(mouth_1);
+    } else if(vol < 6){
+        epd.SetFrameMemory(mouth_2);
+    } else if(vol < 8){
+        epd.SetFrameMemory(mouth_3);
     } else {
-        drawImage((const uint8_t*)mouth_4);
+        epd.SetFrameMemory(mouth_4);
     }
+    epd.DisplayFrame();
 } 
 
 void onPDMdata() {
