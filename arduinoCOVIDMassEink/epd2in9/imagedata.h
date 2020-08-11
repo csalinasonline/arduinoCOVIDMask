@@ -24,5 +24,10 @@
  */
 
 extern const unsigned char IMAGE_DATA[];
-extern const unsigned char IMAGE_DATA2[];
+extern const unsigned char mouth_0[];
+extern const unsigned char mouth_1[];
+extern const unsigned char mouth_2[];
+extern const unsigned char mouth_3[];
+extern const unsigned char mouth_4[];
+extern const unsigned char mouth_smile[];
 /* FILE END */

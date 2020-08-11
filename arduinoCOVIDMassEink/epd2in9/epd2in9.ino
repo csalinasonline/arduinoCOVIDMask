@@ -82,9 +82,22 @@ void loop() {
   time_string[4] = time_now_s % 60 % 10 + '0';
 
 
-  epd.SetFrameMemory(IMAGE_DATA2);
-  epd.DisplayFrame();
-  epd.SetFrameMemory(IMAGE_DATA2);
+  epd.SetFrameMemory(mouth_0);
   epd.DisplayFrame();
   delay(500);
+  epd.SetFrameMemory(mouth_1);
+  epd.DisplayFrame();
+  delay(500);  
+  epd.SetFrameMemory(mouth_2);
+  epd.DisplayFrame();
+  delay(500); 
+  epd.SetFrameMemory(mouth_3);
+  epd.DisplayFrame();
+  delay(500);  
+  epd.SetFrameMemory(mouth_4);
+  epd.DisplayFrame();
+  delay(500); 
+  epd.SetFrameMemory(mouth_smile);
+  epd.DisplayFrame();
+  delay(500);     
 }
